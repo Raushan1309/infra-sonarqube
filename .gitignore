@@ -1,0 +1,24 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+crash.log
+
+# Secrets
+*.pem
+*.key
+.env
+.env.*
+.aws/
+.ssh/
+
+# Generated files
+ips.env
+venv/
+.pipeline-artifacts/
+dynamic_inventory.json
+ansible-playbook.log
+EOFprivate_ips.ini
