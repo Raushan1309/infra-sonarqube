@@ -137,6 +137,22 @@ pipeline {
         }
     }
 }
+stage('Terraform Destroy') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-credentials',
+            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+        ]]) {
+            sh '''
+                set -eu
+                terraform init -reconfigure -input=false
+                terraform destroy -auto-approve -input=false
+            '''
+        }
+    }
+}
 stage('Verify Bastion SSH Connectivity') {
     steps {
         sh '''
