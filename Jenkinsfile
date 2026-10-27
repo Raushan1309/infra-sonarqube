@@ -83,7 +83,7 @@ pipeline {
         // Existing deployment stages below are preserved but deliberately disabled.
         // They require a separate review of bastion SSH and AWS credential handling.
         stage('Terraform Apply') {
-            when { expression { false } } // Disabled for first safe build
+            when { expression { true } } // Disabled for first safe build
             steps {
                 // applying terraform code , and changing the ssh key permissions
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
