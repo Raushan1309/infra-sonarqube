@@ -137,6 +137,27 @@ pipeline {
         }
     }
 }
+stage('Verify Bastion SSH Connectivity') {
+    steps {
+        sh '''
+            set -eu
+
+            SSH_KEY="$WORKSPACE/.ssh/sonarqube-key.pem"
+            BASTION_IP="3.239.205.167"
+
+            echo "Checking SSH key..."
+            test -f "$SSH_KEY"
+            chmod 400 "$SSH_KEY"
+
+            echo "Connecting to Bastion..."
+            ssh -i "$SSH_KEY" \
+                -o StrictHostKeyChecking=accept-new \
+                -o ConnectTimeout=15 \
+                ubuntu@"$BASTION_IP" \
+                "hostname && whoami && echo 'Bastion SSH SUCCESS'"
+        '''
+    }
+}
         // storing the private ips of the bastion host
         stage('Store Private IPs') {
             when { expression { false } } // Disabled for first safe build
