@@ -5,7 +5,7 @@ pipeline {
     environment {
         AWS_CREDS = credentials('aws-credentials')
         TF_VAR_region = 'us-east-1'
-        TF_VAR_bucket_name = 'sonarqube-terraform-state-12'
+        TF_VAR_bucket_name = 'sonarqube-terraform-state-1234'
         SSH_KEY_PATH = "${WORKSPACE}/.ssh/sonarqube-key.pem"
         // virtual env path
         VENV_PATH = "${WORKSPACE}/venv"
