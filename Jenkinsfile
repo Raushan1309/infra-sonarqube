@@ -21,7 +21,7 @@ pipeline {
                     extensions: [],
                     userRemoteConfigs: [[
                         url: 'https://github.com/Raushan1309/infra-sonarqube.git',
-                        credentialsId: 'github-user-password'
+                        //credentialsId: 'github-user-password'
                     ]]
                 ])
             }
@@ -222,7 +222,7 @@ pipeline {
                     extensions: [],
                     userRemoteConfigs: [[
                         url: 'https://github.com/Raushan1309/ansible-sonarqube.git',
-                        credentialsId: 'github-user-password'
+                       // credentialsId: 'github-user-password'
                     ]]
                 ])
             }
