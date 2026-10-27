@@ -83,7 +83,7 @@ pipeline {
         // Existing deployment stages below are preserved but deliberately disabled.
         // They require a separate review of bastion SSH and AWS credential handling.
         stage('Terraform Apply') {
-            when { expression { true } } // Disabled for first safe build
+            when { expression { false} } // Disabled for first safe build
             steps {
                 // applying terraform code , and changing the ssh key permissions
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
@@ -108,6 +108,35 @@ pipeline {
                 }
             }
         }
+        stage('Show Terraform Outputs') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-credentials',
+            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+        ]]) {
+            sh '''
+                set -e
+
+                echo "=== Bastion Public IP ==="
+                terraform output -raw bastion_public_ip
+
+                echo "=== Bastion Public DNS ==="
+                terraform output -raw bastion_public_dns
+
+                echo "=== Private EC2 IPs ==="
+                terraform output aws_private_instance_ip
+
+                echo "=== ALB DNS ==="
+                terraform output -raw alb_dns_name
+
+                echo "=== SSH Key Check ==="
+                ls -l "$WORKSPACE/.ssh/sonarqube-key.pem"
+            '''
+        }
+    }
+}
         // storing the private ips of the bastion host
         stage('Store Private IPs') {
             when { expression { false } } // Disabled for first safe build
