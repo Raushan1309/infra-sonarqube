@@ -3,9 +3,9 @@ pipeline {
     agent any
     // setting the environment like aws creds, ssh key path
     environment {
-        AWS_CREDS = credentials('aws-credentials')
+        // AWS credentials are bound only in stages that need them
         TF_VAR_region = 'us-east-1'
-        TF_VAR_bucket_name = 'sonarqube-terraform-state-1234'
+        // S3 backend bucket is configured in backend.tf: sonarqube-terraform-state-1234
         SSH_KEY_PATH = "${WORKSPACE}/.ssh/sonarqube-key.pem"
         // virtual env path
         VENV_PATH = "${WORKSPACE}/venv"
@@ -27,72 +27,63 @@ pipeline {
             }
         }
 
-        // Commented out - working fine, no need to run every time
-        /*
-        stage('AWS CLI Test & Terraform Init') {
+        // Safe pre-deployment checks. No AWS infrastructure is created by these stages.
+        stage('Terraform Init') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-credentials',
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
-                    //simple init stage
                     sh '''
-                        
-                        aws s3 ls
-                        # Set WORKSPACE variable for Terraform
-                        export TF_VAR_ec2_key_location="${WORKSPACE}/.ssh/sonarqube-key.pem"
-                        terraform init --reconfigure
-                        echo "terraform initialized"
+                        set -eu
+                        aws sts get-caller-identity
+                        aws s3api head-bucket --bucket sonarqube-terraform-state-1234
+                        terraform init -reconfigure -input=false
                     '''
                 }
             }
         }
-        */
 
         stage('Terraform Formatting') {
             steps {
-                // formatting terraform code
-                sh '''
-                    export TF_VAR_ec2_key_location="${WORKSPACE}/.ssh/sonarqube-key.pem"
-                    terraform fmt && echo "formatted terraform code"
-                '''
+                sh 'terraform fmt -check -recursive'
             }
         }
 
-        // Commented out - working fine, no need to run every time
-        /*
         stage('Terraform Validate') {
             steps {
-                // validating terraform code
-                sh '''
-                    export TF_VAR_ec2_key_location="${WORKSPACE}/.ssh/sonarqube-key.pem"
-                    terraform validate && echo "validated terraform code"
-                '''
+                sh 'terraform validate'
             }
         }
-        */
 
-        // Commented out - working fine, no need to run every time
-        /*
         stage('Terraform Plan') {
             steps {
-                // planning terraform code
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-credentials',
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
                     sh '''
+                        set -eu
+                        mkdir -p "${WORKSPACE}/.ssh"
                         export TF_VAR_ec2_key_location="${WORKSPACE}/.ssh/sonarqube-key.pem"
-                        terraform plan && echo "planning terraform code"
+                        if [ ! -f terraform.tfvars ]; then
+                            echo 'ERROR: terraform.tfvars is missing in the Jenkins workspace.'
+                            echo 'Required root variables need to be provided before planning.'
+                            echo 'Do not run Terraform Apply yet.'
+                            exit 1
+                        fi
+                        terraform plan -input=false -out=tfplan
                     '''
                 }
             }
         }
-        */
 
+        // Existing deployment stages below are preserved but deliberately disabled.
+        // They require a separate review of bastion SSH and AWS credential handling.
         stage('Terraform Apply') {
+            when { expression { false } } // Disabled for first safe build
             steps {
                 // applying terraform code , and changing the ssh key permissions
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
@@ -119,6 +110,7 @@ pipeline {
         }
         // storing the private ips of the bastion host
         stage('Store Private IPs') {
+            when { expression { false } } // Disabled for first safe build
             steps {
                 sh '''
                 ./store_ip.sh
@@ -137,6 +129,7 @@ pipeline {
         }
         // fixinbng the ssh key permissions
         stage('ssh key permissions'){
+            when { expression { false } } // Disabled for first safe build
             steps {
                 sh '''
                     set -e
@@ -215,6 +208,7 @@ pipeline {
         }
         // ansible repo checkout
         stage('Git Checkout - Ansible Repo') {
+            when { expression { false } } // Disabled for first safe build
             steps {
                 checkout([$class: 'GitSCM',
                     branches: [[name: '*/main']],
@@ -230,6 +224,7 @@ pipeline {
 
         // setting up the virtual environment and installing the ansible dependencies
             stage('Setup Virtualenv & Install Ansible dependencies') {
+            when { expression { false } } // Disabled for first safe build
                 steps {
                     sh '''
                         
@@ -250,6 +245,7 @@ pipeline {
 
         // testing the bastion connectivity
         stage('Test Bastion Connectivity') {
+            when { expression { false } } // Disabled for first safe build
             steps {
                 sh '''
                     set -e
@@ -299,6 +295,7 @@ pipeline {
         
         // installing the sonarqube from the bastion host
         stage('Install SonarQube from Bastion Host') {
+            when { expression { false } } // Disabled for first safe build
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-credentials',
@@ -1028,7 +1025,7 @@ EOF
         success {
             echo "=========================================="
             echo "Pipeline completed successfully!"
-            echo "Primary task completed: SonarQube installed using dynamic inventory"
+            echo "Terraform pre-deployment checks completed; infrastructure deployment is disabled"
             echo "=========================================="
         }
         failure {
