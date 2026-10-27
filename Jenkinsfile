@@ -164,25 +164,27 @@ stage('Verify Private EC2 SSH Connectivity') {
             set -eu
 
             SSH_KEY="$WORKSPACE/.ssh/sonarqube-key.pem"
-            BASTION_IP=$(terraform output -raw bastion_public_ip 2>/dev/null || true)
+            BASTION_IP="3.239.205.167"
 
-            # Use the verified bastion IP if Terraform output
-            # requires AWS credentials in this stage
-            BASTION_IP="${BASTION_IP:-3.239.205.167}"
+            chmod 400 "$SSH_KEY"
 
             echo "Testing Private EC2-A..."
+
             ssh -i "$SSH_KEY" \
+                -o IdentitiesOnly=yes \
                 -o StrictHostKeyChecking=accept-new \
                 -o ConnectTimeout=15 \
-                -J ubuntu@"$BASTION_IP" \
+                -o "ProxyCommand=ssh -i $SSH_KEY -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -W %h:%p ubuntu@$BASTION_IP" \
                 ubuntu@10.0.3.89 \
                 "hostname && whoami"
 
             echo "Testing Private EC2-B..."
+
             ssh -i "$SSH_KEY" \
+                -o IdentitiesOnly=yes \
                 -o StrictHostKeyChecking=accept-new \
                 -o ConnectTimeout=15 \
-                -J ubuntu@"$BASTION_IP" \
+                -o "ProxyCommand=ssh -i $SSH_KEY -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -W %h:%p ubuntu@$BASTION_IP" \
                 ubuntu@10.0.4.232 \
                 "hostname && whoami"
 
