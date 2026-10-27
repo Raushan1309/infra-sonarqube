@@ -14,11 +14,11 @@ variable "accepter_vpc_id" {
 }
 
 variable "requester_vpc_cidr" {
-  type        = string
+  type = string
 }
 
 variable "accepter_vpc_cidr" {
-  type        = string
+  type = string
 }
 
 

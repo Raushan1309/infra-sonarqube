@@ -6,10 +6,10 @@ resource "aws_security_group" "public_sg" {
   vpc_id      = var.vpc_id
   # tcp for everyone
   ingress {
-      from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-  
+    from_port = 80
+    to_port   = 80
+    protocol  = "tcp"
+
     cidr_blocks = var.everywhere_host
   }
   # http for every one
@@ -30,15 +30,15 @@ resource "aws_security_group" "public_sg" {
   }
   # all rgress
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
     # note - cidr block should be a list
     cidr_blocks = var.everywhere_host
   }
   tags = {
-    Name = "sonarqube-public-sg"
-    attached_to = "pub-subnet-1 and pub-subnet-2"
+    Name         = "sonarqube-public-sg"
+    attached_to  = "pub-subnet-1 and pub-subnet-2"
     availibility = "1a 1b"
   }
 }
@@ -57,10 +57,10 @@ resource "aws_security_group" "private_sg" {
   }
   # Allow SSH from the bastion/public SG only
   ingress {
-    description     = "SSH from bastion SG"
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
+    description = "SSH from bastion SG"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     # Allow SSH from the public (bastion) security group
     security_groups = [aws_security_group.public_sg.id]
   }
@@ -107,9 +107,9 @@ resource "aws_security_group" "private_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   # Ephemeral ports from VPC only (for return traffic from outbound connections)
-  ingress{
+  ingress {
     description = "ephemeral ports from VPC"
     from_port   = 1024
     to_port     = 65535
@@ -117,11 +117,11 @@ resource "aws_security_group" "private_sg" {
     cidr_blocks = [var.vpc_cidr_block]
   }
   ingress {
-    description     = "Ping for diagnostics (optional)"
-    from_port       = -1
-    to_port         = -1
-    protocol        = "icmp"
-    cidr_blocks     = [var.vpc_cidr_block]
+    description = "Ping for diagnostics (optional)"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
   egress {
     from_port   = 0
@@ -131,8 +131,8 @@ resource "aws_security_group" "private_sg" {
   }
 
   tags = {
-    Name = "sonarqube-private-sg"
-    attached_to = "pri-subnet-1 and pri-subnet-2"
+    Name         = "sonarqube-private-sg"
+    attached_to  = "pri-subnet-1 and pri-subnet-2"
     availibility = "1a 1b"
   }
 }
@@ -143,11 +143,11 @@ resource "aws_security_group" "private_sg" {
 resource "aws_network_acl" "public_nacl" {
   vpc_id = var.vpc_id
   # Allow SSH from whitelisted IPs, HTTP/HTTPS from everywhere and allow all egress
-  
+
   # allowed host ingress
   ingress {
     protocol   = "tcp"
-    rule_no    = 110 
+    rule_no    = 110
     action     = "allow"
     cidr_block = var.allowed_host[0]
     from_port  = 22
@@ -279,9 +279,9 @@ resource "aws_network_acl" "public_nacl" {
     to_port    = 65535
   }
   tags = {
-    Name = "public-nacl"
+    Name        = "public-nacl"
     attached_to = "public subnets a and b"
-    access = "public"
+    access      = "public"
   }
 }
 
@@ -524,30 +524,30 @@ resource "aws_network_acl" "private_nacl" {
     to_port    = 65535
   }
   tags = {
-    Name = "private-nacl"
+    Name        = "private-nacl"
     attached_to = "private subnet a and b"
-    access = "private"
+    access      = "private"
   }
 }
 
 
 
 resource "aws_network_acl_association" "pub_subnet_a_association" {
-  subnet_id      = var.pub_subnet_a_association  # Reference to your subnet
-  network_acl_id = aws_network_acl.public_nacl.id  # Reference to your NACL
+  subnet_id      = var.pub_subnet_a_association   # Reference to your subnet
+  network_acl_id = aws_network_acl.public_nacl.id # Reference to your NACL
 }
 
 resource "aws_network_acl_association" "pub_subnet_b_association" {
   subnet_id      = var.pub_subnet_b_association   # Reference to your subnet
-  network_acl_id = aws_network_acl.public_nacl.id   # Reference to your NACL
+  network_acl_id = aws_network_acl.public_nacl.id # Reference to your NACL
 }
 
 resource "aws_network_acl_association" "pri_subnet_a_association" {
-  subnet_id      = var.pri_subnet_a_association   # Reference to your subnet
-  network_acl_id = aws_network_acl.private_nacl.id   # Reference to your NACL
+  subnet_id      = var.pri_subnet_a_association    # Reference to your subnet
+  network_acl_id = aws_network_acl.private_nacl.id # Reference to your NACL
 }
 
 resource "aws_network_acl_association" "pri_subnet_b_association" {
-  subnet_id      = var.pri_subnet_b_association   # Reference to your subnet
-  network_acl_id = aws_network_acl.private_nacl.id  # Reference to your NACL
+  subnet_id      = var.pri_subnet_b_association    # Reference to your subnet
+  network_acl_id = aws_network_acl.private_nacl.id # Reference to your NACL
 }

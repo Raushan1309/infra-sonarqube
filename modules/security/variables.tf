@@ -1,6 +1,6 @@
 variable "vpc_id" {
-    type = string
-    description = "vpc id for security groups"
+  type        = string
+  description = "vpc id for security groups"
 }
 
 variable "allowed_host" {
@@ -15,21 +15,21 @@ variable "everywhere_host" {
 
 variable "pub_subnet_a_association" {
   description = "attatching nacl to public a subnet"
-  type = string
+  type        = string
 }
 
 variable "pub_subnet_b_association" {
   description = "attatching nacl to public b subnet"
-  type = string
+  type        = string
 }
 
 variable "pri_subnet_a_association" {
   description = "attatching nacl to private a subnet"
-  type = string
+  type        = string
 }
 variable "pri_subnet_b_association" {
   description = "attatching nacl to private b subnet"
-  type = string
+  type        = string
 }
 
 variable "vpc_cidr_block" {

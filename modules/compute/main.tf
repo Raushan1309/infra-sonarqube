@@ -7,23 +7,23 @@ data "aws_ami" "ubuntu" {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
-  
+
 }
 # bastion host
 resource "aws_instance" "public_ec2" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.small_instance_size
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.small_instance_size
   # change here
-  subnet_id              = var.public_subnet_a_id
-  vpc_security_group_ids = [var.public_security_group]
-  key_name               = var.key_name
+  subnet_id                   = var.public_subnet_a_id
+  vpc_security_group_ids      = [var.public_security_group]
+  key_name                    = var.key_name
   associate_public_ip_address = true
 
   tags = {
     Name = "public-ec2-instance"
     type = "bastion host"
   }
- 
+
 }
 
 
@@ -55,15 +55,15 @@ resource "aws_launch_template" "sonarqube_lt" {
 resource "aws_instance" "private_server_a" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.sonarqube_instance_size
-  subnet_id              = var.private_subnets[0]  # Private Subnet 1a (10.0.3.0/24)
+  subnet_id              = var.private_subnets[0] # Private Subnet 1a (10.0.3.0/24)
   vpc_security_group_ids = var.private_sg
   key_name               = var.key_name
 
   tags = {
-    Name = "private-server-1a"
-    az   = "1a"
-    env  = "sonarqube"
-    role = "sonarqube-postgres"  # Both services on same instance
+    Name   = "private-server-1a"
+    az     = "1a"
+    env    = "sonarqube"
+    role   = "sonarqube-postgres" # Both services on same instance
     subnet = "private-subnet-1a"
   }
 }
@@ -71,15 +71,15 @@ resource "aws_instance" "private_server_a" {
 resource "aws_instance" "private_server_b" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.sonarqube_instance_size
-  subnet_id              = var.private_subnets[1]  # Private Subnet 1b (10.0.4.0/24)
+  subnet_id              = var.private_subnets[1] # Private Subnet 1b (10.0.4.0/24)
   vpc_security_group_ids = var.private_sg
   key_name               = var.key_name
 
   tags = {
-    Name = "private-server-1b"
-    az   = "1b"
-    env  = "sonarqube"
-    role = "sonarqube-postgres"  # Both services on same instance
+    Name   = "private-server-1b"
+    az     = "1b"
+    env    = "sonarqube"
+    role   = "sonarqube-postgres" # Both services on same instance
     subnet = "private-subnet-1b"
   }
 }

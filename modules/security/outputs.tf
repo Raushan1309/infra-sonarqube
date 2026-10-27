@@ -1,6 +1,6 @@
 output "public_sg_id" {
   description = "public security group id"
-  value = aws_security_group.public_sg.id
+  value       = aws_security_group.public_sg.id
 }
 
 # In module/security/outputs.tf
