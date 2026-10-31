@@ -224,23 +224,46 @@ PYCODE
                             trap 'rm -rf "$TEMP_DIR"' EXIT
                             export TEMP_DIR
                             python3 - <<'PYCODE'
-import json, os
-out = json.load(open(os.environ['WORKSPACE']+'/.terraform-outputs.json'))
+import json
+import os
+
+with open(os.environ['WORKSPACE'] + '/.terraform-outputs.json') as file:
+    out = json.load(file)
+
 ips = out['aws_private_instance_ip']['value']
 bastion = out['bastion_public_ip']['value']
 key = os.environ['SSH_KEY_PATH']
-assert len(ips) == 2, 'Expected two private EC2 instances'
 tmp = os.environ['TEMP_DIR']
-with open(tmp+'/inventory.ini', 'w') as f:
-    f.write('[sonarqube_servers]\n')
-    for ip in ips: f.write(ip+'\n')
-    f.write('\n[sonarqube_servers:vars]\nansible_user=ubuntu\nansible_python_interpreter=/usr/bin/python3\n')
-with open(tmp+'/ssh_config', 'w') as f:
-    f.write('Host '+' '.join(ips)+'\n')
-    f.write('    User ubuntu\n    IdentityFile '+key+'\n    IdentitiesOnly yes\n    StrictHostKeyChecking accept-new\n')
-    f.write('    ProxyCommand ssh -i '+key+' -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -W %h:%p ubuntu@'+bastion+'\n')
-with open(tmp+'/secrets.json', 'w') as f:
-    json.dump({'sonar_db_password': os.environ['SONAR_DB_PASSWORD']}, f)
+
+assert len(ips) == 2, 'Expected two private EC2 instances'
+
+with open(tmp + '/inventory.ini', 'w') as f:
+    f.write('[sonarqube_servers]' + chr(10))
+    for ip in ips:
+        f.write(ip + chr(10))
+
+    f.write(chr(10) + '[sonarqube_servers:vars]' + chr(10))
+    f.write('ansible_user=ubuntu' + chr(10))
+    f.write('ansible_python_interpreter=/usr/bin/python3' + chr(10))
+
+with open(tmp + '/ssh_config', 'w') as f:
+    f.write('Host ' + ' '.join(ips) + chr(10))
+    f.write('    User ubuntu' + chr(10))
+    f.write('    IdentityFile ' + key + chr(10))
+    f.write('    IdentitiesOnly yes' + chr(10))
+    f.write('    StrictHostKeyChecking accept-new' + chr(10))
+    f.write(
+        '    ProxyCommand ssh -i ' + key +
+        ' -o IdentitiesOnly=yes' +
+        ' -o StrictHostKeyChecking=accept-new' +
+        ' -W %h:%p ubuntu@' + bastion + chr(10)
+    )
+
+with open(tmp + '/secrets.json', 'w') as f:
+    json.dump(
+        {'sonar_db_password': os.environ['SONAR_DB_PASSWORD']},
+        f
+    )
 PYCODE
                             export ANSIBLE_SSH_ARGS="-F $TEMP_DIR/ssh_config"
                             export ANSIBLE_HOST_KEY_CHECKING=True
