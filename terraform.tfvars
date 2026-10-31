@@ -14,7 +14,7 @@ private_subnet_a_cidr_block = "10.0.3.0/24"
 private_subnet_b_cidr_block = "10.0.4.0/24"
 
 # Replace with your actual public IP /32
-whitelisted_ip = ["47.31.95.244"]
+whitelisted_ip = ["47.31.95.244/32"]
 
 all_hosts = ["0.0.0.0/0"]
 
